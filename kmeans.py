@@ -103,12 +103,10 @@ def plotKMeans(tsneTuple, c=10, interactive=True):
             mplcursors.cursor(scatter).connect(
                 "add", lambda sel: sel.annotation.set_text(words[sel.target.index])
             )
-            
-            plt.show()
         else:
             plt.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters.labels_, alpha=0.5)
 
-            cluster_centers = [np.mean(word_vectors_2d[clusters.labels_ == i], axis=0) for i in range(np.shape[0] if isinstance(cc, np.ndarray) else cc)]
+            cluster_centers = [np.mean(word_vectors_2d[clusters.labels_ == i], axis=0) for i in range(cc.shape[0] if isinstance(cc, np.ndarray) else cc)]
 
             for i, center in enumerate(cluster_centers):
                 cluster_words = np.array(words)[clusters.labels_ == i]
@@ -116,13 +114,14 @@ def plotKMeans(tsneTuple, c=10, interactive=True):
                 if len(cluster_words) > 10:
                     center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d[clusters.labels_ == i] - center, axis=1))[0]]
                     plt.annotate(center_word, xy=center)
-                    
-            plt.show()
+
+        plt.title(f"No. of clusters: {cc.shape[0] if isinstance(cc, np.ndarray) else cc}")   
+        plt.show()
 
 def exampleClustering(interactive=True):
     plotKMeans(loadTSNE(), interactive=interactive)
 
-def exampleClusteringInit():
+def exampleClusteringInit(interactive=True):
     tsneTuple = loadTSNE()
 
     words, word_vectors, word_vectors_2d = tsneTuple
@@ -140,12 +139,13 @@ def exampleClusteringInit():
     for i, word in enumerate(initWords):
         initCentroids[i, :] = word_vectors[words.index(word)]
 
-    plotKMeans(tsneTuple, initCentroids)
+    plotKMeans(tsneTuple, initCentroids, interactive)
 
 if __name__ == '__main__':
     if not (os.path.isfile(vocabPickle) and os.path.isfile(tsnePickle)):
         saveFiles()
 
-    exampleClustering()
-    #exampleClustering(False)
-    exampleClusteringInit()
+    interactive = False
+
+    exampleClustering(interactive)
+    exampleClusteringInit(interactive)

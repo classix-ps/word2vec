@@ -103,10 +103,9 @@ def exampleClustering(interactive=True):
     clusterSimilarities = sorted(list(zip(zip(*indices), similarities)), key=lambda x: x[1])
     #print(clusterSimilarities)
 
-    for (c1, c2), _ in clusterSimilarities[:3]:
+    for (c1, c2), similarity in clusterSimilarities[:3] + clusterSimilarities[-3:]:
         mask = np.where(np.logical_or(clusters.labels_ == c1, clusters.labels_ == c2))
         word_vectors_2d_cs = word_vectors_2d[mask]
-        word_vectors_cs = word_vectors[mask]
         labels_cs = clusters.labels_[mask]
         words_cs = np.array(words)[mask]
 
@@ -117,8 +116,6 @@ def exampleClustering(interactive=True):
             mplcursors.cursor(scatter).connect(
                 "add", lambda sel: sel.annotation.set_text(words_cs[sel.target.index])
             )
-            
-            plt.show()
         else:
             plt.scatter(word_vectors_2d_cs[:, 0], word_vectors_2d_cs[:, 1], c=labels_cs, alpha=0.5)
             
@@ -130,12 +127,14 @@ def exampleClustering(interactive=True):
                 if len(cluster_words) > 10:
                     center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d_cs[labels_cs == i] - center, axis=1))[0]]
                     plt.annotate(center_word, xy=center)
-                    
-            plt.show()
+
+        plt.title(f"Cosine similarity: {similarity}")     
+        plt.show()
 
 if __name__ == '__main__':
     if not (os.path.isfile(vocabPickle) and os.path.isfile(tsnePickle)):
         saveFiles()
 
-    exampleClustering()
-    #exampleClustering(False)
+    interactive = False
+
+    exampleClustering(interactive)
