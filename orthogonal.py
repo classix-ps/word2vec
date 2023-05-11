@@ -80,7 +80,7 @@ def saveFiles():
     vocab = saveVocab(vocabPath)
     saveTSNE(vocab)
 
-def getKMeans(word_vectors, c=10):
+def getKMeans(word_vectors, c):
     if isinstance(c, np.ndarray):
         kmeans = KMeans(n_clusters=c.shape[0], init=c, random_state=0)
     else:
@@ -89,12 +89,10 @@ def getKMeans(word_vectors, c=10):
     
     return clusters
 
-def exampleClustering():
-    tsneTuple = loadTSNE()
-
+def plotKMeans(tsneTuple, c=10):
     words, word_vectors, word_vectors_2d = tsneTuple
 
-    clusters = getKMeans(word_vectors)
+    clusters = getKMeans(word_vectors, c)
 
     indices = np.triu_indices(clusters.cluster_centers_.shape[0], k=1)
 
@@ -128,8 +126,32 @@ def exampleClustering():
         plt.title(f"Cosine similarity: {similarity}")     
         plt.show()
 
+def exampleClustering():
+    plotKMeans(loadTSNE())
+
+def exampleClusteringInit():
+    tsneTuple = loadTSNE()
+
+    words, word_vectors, word_vectors_2d = tsneTuple
+
+    initWords = [
+        "male",
+        "hot",
+        "large",
+        "fast",
+        "loud",
+        "bright",
+    ]
+
+    initCentroids = np.zeros((len(initWords), DIMENSIONS))
+    for i, word in enumerate(initWords):
+        initCentroids[i, :] = word_vectors[words.index(word)]
+
+    plotKMeans(tsneTuple, initCentroids)
+
 if __name__ == '__main__':
     if not (os.path.isfile(vocabPickle) and os.path.isfile(tsnePickle)):
         saveFiles()
 
     exampleClustering()
+    exampleClusteringInit()
