@@ -89,7 +89,7 @@ def getKMeans(word_vectors, c=10):
     
     return clusters
 
-def exampleClustering(interactive=True):
+def exampleClustering():
     tsneTuple = loadTSNE()
 
     words, word_vectors, word_vectors_2d = tsneTuple
@@ -109,24 +109,21 @@ def exampleClustering(interactive=True):
         labels_cs = clusters.labels_[mask]
         words_cs = np.array(words)[mask]
 
-        if interactive:
-            fig, ax = plt.subplots()
-            scatter = ax.scatter(word_vectors_2d_cs[:, 0], word_vectors_2d_cs[:, 1], c=labels_cs, alpha=0.5)
-            
-            mplcursors.cursor(scatter).connect(
-                "add", lambda sel: sel.annotation.set_text(words_cs[sel.target.index])
-            )
-        else:
-            plt.scatter(word_vectors_2d_cs[:, 0], word_vectors_2d_cs[:, 1], c=labels_cs, alpha=0.5)
-            
-            cluster_centers = [(i, np.mean(word_vectors_2d_cs[labels_cs == i], axis=0)) for i in [c1, c2]]
+        fig, ax = plt.subplots()
+        scatter = ax.scatter(word_vectors_2d_cs[:, 0], word_vectors_2d_cs[:, 1], c=labels_cs, alpha=0.5)
+        
+        mplcursors.cursor(scatter).connect(
+            "add", lambda sel: sel.annotation.set_text(words_cs[sel.target.index])
+        )
+        
+        cluster_centers = [(i, np.mean(word_vectors_2d_cs[labels_cs == i], axis=0)) for i in [c1, c2]]
 
-            for i, center in cluster_centers:
-                cluster_words = words_cs[labels_cs == i]
-                #print(cluster_words)
-                if len(cluster_words) > 10:
-                    center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d_cs[labels_cs == i] - center, axis=1))[0]]
-                    plt.annotate(center_word, xy=center)
+        for i, center in cluster_centers:
+            cluster_words = words_cs[labels_cs == i]
+            #print(cluster_words)
+            if len(cluster_words) > 10:
+                center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d_cs[labels_cs == i] - center, axis=1))[0]]
+                plt.annotate(center_word, xy=center)
 
         plt.title(f"Cosine similarity: {similarity}")     
         plt.show()
@@ -135,6 +132,4 @@ if __name__ == '__main__':
     if not (os.path.isfile(vocabPickle) and os.path.isfile(tsnePickle)):
         saveFiles()
 
-    interactive = False
-
-    exampleClustering(interactive)
+    exampleClustering()

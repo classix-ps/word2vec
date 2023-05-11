@@ -87,7 +87,7 @@ def getKMeans(word_vectors, c):
     
     return clusters
 
-def plotKMeans(tsneTuple, c=10, interactive=True):
+def plotKMeans(tsneTuple, c=10):
     words, word_vectors, word_vectors_2d = tsneTuple
     
     if not isinstance(c, list):
@@ -95,33 +95,30 @@ def plotKMeans(tsneTuple, c=10, interactive=True):
     
     for cc in c:
         clusters = getKMeans(word_vectors, cc)
+
+        fig, ax = plt.subplots()
+        scatter = ax.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters.labels_, alpha=0.5)
         
-        if interactive:
-            fig, ax = plt.subplots()
-            scatter = ax.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters.labels_, alpha=0.5)
-            
-            mplcursors.cursor(scatter).connect(
-                "add", lambda sel: sel.annotation.set_text(words[sel.target.index])
-            )
-        else:
-            plt.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters.labels_, alpha=0.5)
+        mplcursors.cursor(scatter).connect(
+            "add", lambda sel: sel.annotation.set_text(words[sel.target.index])
+        )
 
-            cluster_centers = [np.mean(word_vectors_2d[clusters.labels_ == i], axis=0) for i in range(cc.shape[0] if isinstance(cc, np.ndarray) else cc)]
+        cluster_centers = [np.mean(word_vectors_2d[clusters.labels_ == i], axis=0) for i in range(cc.shape[0] if isinstance(cc, np.ndarray) else cc)]
 
-            for i, center in enumerate(cluster_centers):
-                cluster_words = np.array(words)[clusters.labels_ == i]
-                #print(cluster_words)
-                if len(cluster_words) > 10:
-                    center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d[clusters.labels_ == i] - center, axis=1))[0]]
-                    plt.annotate(center_word, xy=center)
+        for i, center in enumerate(cluster_centers):
+            cluster_words = np.array(words)[clusters.labels_ == i]
+            #print(cluster_words)
+            if len(cluster_words) > 10:
+                center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d[clusters.labels_ == i] - center, axis=1))[0]]
+                plt.annotate(center_word, xy=center)
 
         plt.title(f"No. of clusters: {cc.shape[0] if isinstance(cc, np.ndarray) else cc}")   
         plt.show()
 
-def exampleClustering(interactive=True):
-    plotKMeans(loadTSNE(), interactive=interactive)
+def exampleClustering():
+    plotKMeans(loadTSNE())
 
-def exampleClusteringInit(interactive=True):
+def exampleClusteringInit():
     tsneTuple = loadTSNE()
 
     words, word_vectors, word_vectors_2d = tsneTuple
@@ -139,13 +136,11 @@ def exampleClusteringInit(interactive=True):
     for i, word in enumerate(initWords):
         initCentroids[i, :] = word_vectors[words.index(word)]
 
-    plotKMeans(tsneTuple, initCentroids, interactive)
+    plotKMeans(tsneTuple, initCentroids)
 
 if __name__ == '__main__':
     if not (os.path.isfile(vocabPickle) and os.path.isfile(tsnePickle)):
         saveFiles()
-
-    interactive = False
-
-    exampleClustering(interactive)
-    exampleClusteringInit(interactive)
+        
+    exampleClustering()
+    exampleClusteringInit()
