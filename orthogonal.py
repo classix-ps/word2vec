@@ -96,37 +96,36 @@ def exampleClustering(interactive=True):
 
     clusters = getKMeans(word_vectors)
 
-    labels = clusters.labels_
-    centroids = clusters.cluster_centers_
+    indices = np.triu_indices(clusters.cluster_centers_.shape[0], k=1)
 
-    indices = np.triu_indices(centroids.shape[0], k=1)
-
-    similarities = cosine_similarity(centroids)[indices]
+    similarities = cosine_similarity(clusters.cluster_centers_)[indices]
 
     clusterSimilarities = sorted(list(zip(zip(*indices), similarities)), key=lambda x: x[1])
     #print(clusterSimilarities)
 
     for (c1, c2), _ in clusterSimilarities[:3]:
-        mask = np.where(np.logical_or(labels == c1, labels == c2))
-        word_vectors_2d_cs = word_vectors_2d[mask, :][0]
-        labels_cs = labels[mask]
+        mask = np.where(np.logical_or(clusters.labels_ == c1, clusters.labels_ == c2))
+        word_vectors_2d_cs = word_vectors_2d[mask]
+        word_vectors_cs = word_vectors[mask]
+        labels_cs = clusters.labels_[mask]
+        words_cs = np.array(words)[mask]
 
         if interactive:
             fig, ax = plt.subplots()
             scatter = ax.scatter(word_vectors_2d_cs[:, 0], word_vectors_2d_cs[:, 1], c=labels_cs, alpha=0.5)
             
             mplcursors.cursor(scatter).connect(
-                "add", lambda sel: sel.annotation.set_text(words[sel.target.index])
+                "add", lambda sel: sel.annotation.set_text(words_cs[sel.target.index])
             )
             
             plt.show()
         else:
-            cluster_centers = np.array([centroids[c1], centroids[c2]])
-
             plt.scatter(word_vectors_2d_cs[:, 0], word_vectors_2d_cs[:, 1], c=labels_cs, alpha=0.5)
             
-            for i, center in enumerate(cluster_centers):
-                cluster_words = np.array(words)[labels_cs == i]
+            cluster_centers = [(i, np.mean(word_vectors_2d_cs[labels_cs == i], axis=0)) for i in [c1, c2]]
+
+            for i, center in cluster_centers:
+                cluster_words = words_cs[labels_cs == i]
                 #print(cluster_words)
                 if len(cluster_words) > 10:
                     center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d_cs[labels_cs == i] - center, axis=1))[0]]
@@ -139,3 +138,4 @@ if __name__ == '__main__':
         saveFiles()
 
     exampleClustering()
+    #exampleClustering(False)

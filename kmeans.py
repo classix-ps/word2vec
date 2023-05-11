@@ -83,7 +83,7 @@ def getKMeans(word_vectors, c):
         kmeans = KMeans(n_clusters=c.shape[0], init=c, random_state=0)
     else:
         kmeans = KMeans(n_clusters=c, random_state=0)
-    clusters = kmeans.fit_predict(word_vectors)
+    clusters = kmeans.fit(word_vectors)
     
     return clusters
 
@@ -98,7 +98,7 @@ def plotKMeans(tsneTuple, c=10, interactive=True):
         
         if interactive:
             fig, ax = plt.subplots()
-            scatter = ax.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters, alpha=0.5)
+            scatter = ax.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters.labels_, alpha=0.5)
             
             mplcursors.cursor(scatter).connect(
                 "add", lambda sel: sel.annotation.set_text(words[sel.target.index])
@@ -106,25 +106,15 @@ def plotKMeans(tsneTuple, c=10, interactive=True):
             
             plt.show()
         else:
-            if isinstance(cc, np.ndarray):
-                clusterCount = np.shape[0]
-            else:
-                clusterCount = cc
+            plt.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters.labels_, alpha=0.5)
 
-            cluster_centers = []
-            for i in range(clusterCount):
-                cluster_points = word_vectors_2d[clusters == i]
-                cluster_center = np.mean(cluster_points, axis=0)
-                cluster_centers.append(cluster_center)
-            cluster_centers = np.array(cluster_centers)
+            cluster_centers = [np.mean(word_vectors_2d[clusters.labels_ == i], axis=0) for i in range(np.shape[0] if isinstance(cc, np.ndarray) else cc)]
 
-            plt.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters, alpha=0.5)
-            
             for i, center in enumerate(cluster_centers):
-                cluster_words = np.array(words)[clusters == i]
+                cluster_words = np.array(words)[clusters.labels_ == i]
                 #print(cluster_words)
                 if len(cluster_words) > 10:
-                    center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d[clusters == i] - center, axis=1))[0]]
+                    center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d[clusters.labels_ == i] - center, axis=1))[0]]
                     plt.annotate(center_word, xy=center)
                     
             plt.show()
