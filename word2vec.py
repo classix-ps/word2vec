@@ -14,9 +14,10 @@ class Distance(Enum):
 #distance = Distance.EUCLID
 distance = Distance.COSINE
 
-ROWS = 8192
+ROWS = 65536
 
-vocabPath = "lexvec.enwiki+newscrawl.300d.W.pos.vectors"
+#vocabPath = "lexvec.enwiki+newscrawl.300d.W.pos.vectors"
+vocabPath = "vectors.txt"
 
 vocabPickle = "vocab.pickle"
 
@@ -133,7 +134,7 @@ def getDimensionalMapping2(vocab, dimensionalMaps, dimensionalPairs):
 def getVocabFromFile(filename, maxRow=ROWS):
     vocab = {}
 
-    with open(filename) as f:
+    with open(filename, encoding="utf8") as f:
         row = 1
         while line := f.readline():
             if row == 1:
@@ -150,7 +151,7 @@ def getVocabFromFile(filename, maxRow=ROWS):
     return vocab
 
 def saveVocab(filename, maxRow=ROWS):
-    vocab = getVocabFromFile("lexvec.enwiki+newscrawl.300d.W.pos.vectors", maxRow)
+    vocab = getVocabFromFile(filename, maxRow)
 
     with open(vocabPickle, "wb") as f:
         pickle.dump(vocab, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -166,7 +167,7 @@ def loadVocab():
 def exampleEquations(vocab):
     print("king - queen:", getDistance(vocab["king"], vocab["queen"]), '\n')
 
-    analyzeEquation(vocab, "king", "man", "woman", "queen") # Even worse in shakespeare, almost no connection to queen
+    analyzeEquation(vocab, "king", "man", "woman", "queen") # Even worse on shakespeare training data, almost no connection to queen
     analyzeEquation(vocab, "king", "male", "female", "queen")
     analyzeEquation(vocab, "father", "man", "woman", "mother")
     analyzeEquation(vocab, "father", "son", "daughter", "mother")
