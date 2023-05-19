@@ -145,6 +145,13 @@ def norm(v):
 def getAngle(v1, v2):
     return np.degrees(np.arccos(np.clip(np.dot(norm(v1), norm(v2)), -1, 1)))
 
+def getDistance(v1, v2):
+    if distance == Distance.EUCLID:
+        return np.linalg.norm(v1 - v2)
+        
+    if distance == Distance.COSINE:
+        return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+
 def plotKMeansOrthog(tsneTuple, c=10):
     words, word_vectors, word_vectors_2d = tsneTuple
 
@@ -156,7 +163,7 @@ def plotKMeansOrthog(tsneTuple, c=10):
 
     clusterDistances = sorted(list(zip(zip(*indices), distances)), key=lambda x: x[1], reverse=True)
     
-    clusterAngles = []
+    clusterPairwise = []
     for i, (clusterPair1, _) in enumerate(clusterDistances[:-1]):
         for clusterPair2, _ in clusterDistances[i+1:]:
             if set(clusterPair1).isdisjoint(set(clusterPair2)):
@@ -168,15 +175,18 @@ def plotKMeansOrthog(tsneTuple, c=10):
                 v22 = clusters.cluster_centers_[c22]
 
                 angle = getAngle(v11 - v12, v21 - v22)
-                clusterAngles.append(((clusterPair1, clusterPair2), angle))
+                dist = getDistance(v11, v12) * getDistance(v21, v22)
+                clusterPairwise.append(((clusterPair1, clusterPair2), dist, angle))
 
-    clusterAngles = sorted(clusterAngles, key=lambda x: abs(x[1] - 90))
-    print(clusterAngles)
+    #clusterPairwiseByAngle = sorted(clusterPairwise, key=lambda x: abs(x[2] - 90))
 
-    return
+    clusterPairwiseByDistance = sorted(clusterPairwise, key=lambda x: x[1], reverse=True)
+    #print(clusterPairwiseByDistance)
+    clusterPairwiseByAngle = list(filter(lambda x: abs(x[2] - 90) < 0.5, clusterPairwiseByDistance))
+    #print(clusterPairwiseByAngle)
 
-    for (c1, c2), similarity in clusterSimilarities[:3] + clusterSimilarities[-3:]:
-        mask = np.where(np.logical_or(clusters.labels_ == c1, clusters.labels_ == c2))
+    for ((c11, c12), (c21, c22)), dist, angle in clusterPairwiseByAngle[:3]:
+        mask = np.where(np.logical_or.reduce((clusters.labels_ == c11, clusters.labels_ == c12, clusters.labels_ == c21, clusters.labels_ == c22)))
         word_vectors_2d_cs = word_vectors_2d[mask]
         labels_cs = clusters.labels_[mask]
         words_cs = np.array(words)[mask]
@@ -187,8 +197,16 @@ def plotKMeansOrthog(tsneTuple, c=10):
         mplcursors.cursor(scatter).connect(
             "add", lambda sel: sel.annotation.set_text(words_cs[sel.target.index])
         )
-        
-        cluster_centers = [(i, np.mean(word_vectors_2d_cs[labels_cs == i], axis=0)) for i in [c1, c2]]
+
+        cluster_centers = [(i, np.mean(word_vectors_2d_cs[labels_cs == i], axis=0)) for i in [c11, c12, c21, c22]]
+
+        c11_center = cluster_centers[0][1]
+        c12_center = cluster_centers[1][1]
+        plt.plot([c11_center[0], c12_center[0]], [c11_center[1], c12_center[1]], 'k--')
+
+        c21_center = cluster_centers[2][1]
+        c22_center = cluster_centers[3][1]
+        plt.plot([c21_center[0], c22_center[0]], [c21_center[1], c22_center[1]], 'k--')
 
         for i, center in cluster_centers:
             cluster_words = words_cs[labels_cs == i]
@@ -197,7 +215,7 @@ def plotKMeansOrthog(tsneTuple, c=10):
                 center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d_cs[labels_cs == i] - center, axis=1))[0]]
                 plt.annotate(center_word, xy=center)
 
-        plt.title(f"{similarity}")     
+        plt.title(f"Angle: {angle}, Product of distances: {dist}")     
         plt.show()
 
 def exampleClustering(tsneTuple):
