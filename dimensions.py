@@ -114,6 +114,11 @@ def getDistance(v1, v2):
 def getScore(dist, angle, cc):
     return dist * pow(((90 - abs(angle - 90)) / 90), 5 * cc)
 
+def pairwise(iterable):
+    "s -> (s0, s1), (s2, s3), (s4, s5), ..."
+    a = iter(iterable)
+    return zip(a, a)
+
 def plotKMeansOrthog(tsneTuple, c=10):
     words, word_vectors, word_vectors_2d = tsneTuple
 
@@ -174,6 +179,28 @@ def plotKMeansOrthog(tsneTuple, c=10):
         axes.append(c)
 
     print(axes)
+
+    fig, ax = plt.subplots()
+    scatter = ax.scatter(word_vectors_2d[:, 0], word_vectors_2d[:, 1], c=clusters.labels_, alpha=0.5)
+        
+    mplcursors.cursor(scatter).connect(
+        "add", lambda sel: sel.annotation.set_text(words[sel.target.index])
+    )
+
+    cluster_centers = [(i, np.mean(word_vectors_2d[clusters.labels_ == i], axis=0)) for i in list(sum(axes, ()))]
+
+    for axisCenter1, axisCenter2 in pairwise(cluster_centers):
+        plt.plot([axisCenter1[1][0], axisCenter2[1][0]], [axisCenter1[1][1], axisCenter2[1][1]], 'k--')
+
+    for i, center in cluster_centers:
+        cluster_words = np.array(words)[clusters.labels_ == i]
+        #print(cluster_words)
+        if len(cluster_words) > 10:
+            center_word = cluster_words[np.argsort(np.linalg.norm(word_vectors_2d[clusters.labels_ == i] - center, axis=1))[0]]
+            plt.annotate(center_word, xy=center)
+
+    plt.title(f"Axes")     
+    plt.show()
 
 if __name__ == '__main__':
     if not (os.path.isfile(vocabPickle) and os.path.isfile(tsnePickle)):
