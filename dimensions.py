@@ -202,10 +202,15 @@ def plotKMeansOrthog(tsneTuple, c=10):
     plt.title(f"Axes")     
     plt.show()
 
+    basis = [np.linalg.norm(clusters.cluster_centers_[c1] - clusters.cluster_centers_[c2]) for (c1, c2) in axes]
+    return basis
+
 if __name__ == '__main__':
     if not (os.path.isfile(vocabPickle) and os.path.isfile(tsnePickle)):
         saveFiles()
 
     tsneTuple = loadTSNE()
 
-    plotKMeansOrthog(tsneTuple)
+    basis = plotKMeansOrthog(tsneTuple)
+
+    # Create word embedding with basis vectors
