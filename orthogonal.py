@@ -225,6 +225,7 @@ def plotKMeansOrthog(tsneTuple, c=10):
                 plt.annotate(center_word, xy=center)
 
         plt.title(f"Angle: {angle}, Product of distances: {dist}\nScore: {getScore(dist, angle, clusters.cluster_centers_.shape[0])}")     
+        # plt.savefig(f"orthogonal_{angle}_{dist}.pdf")
         plt.show()
 
 def exampleClustering(tsneTuple):
